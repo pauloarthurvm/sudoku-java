@@ -40,16 +40,15 @@ public class Main {
         int option = -1;
 
         while(true) {
-            System.out.println("Selecione uma das opções a seguir");
-            System.out.println("1 - Iniciar um novo Jogo");
-            System.out.println("2 - Colocar um novo número");
-            System.out.println("3 - Remover um número");
-            System.out.println("4 - Visualizar jogo atual");
-            System.out.println("5 - Verificar status do jogo");
-            System.out.println("6 - limpar jogo");
-            System.out.println("7 - Finalizar jogo");
-            System.out.println("8 - Sair");
-
+            System.out.println("Select one of the following options");
+            System.out.println("1 - Start a new game");
+            System.out.println("2 - Insert a new number");
+            System.out.println("3 - Remove a number");
+            System.out.println("4 - View current game");
+            System.out.println("5 - Check game status");
+            System.out.println("6 - Clear game");
+            System.out.println("7 - Finish game");
+            System.out.println("8 - Exit");
             option = scanner.nextInt();
 
             switch (option){
@@ -61,7 +60,8 @@ public class Main {
                 case 6 -> clearGame();
                 case 7 -> finishGame();
                 case 8 -> System.exit(0);
-                default -> System.out.println("Opção inválida, selecione uma das opções do menu");
+                default -> System.out.println("Invalid option, please select one of the menu options");
+
             }
 
         }
@@ -69,7 +69,7 @@ public class Main {
 
     private static void startGame(final Map<String, String> positions) {
         if (nonNull(board)){
-            System.out.println("O jogo já foi iniciado");
+            System.out.println("Game started.");
             return;
         }
 
@@ -86,59 +86,113 @@ public class Main {
         }
 
         board = new Board(spaces);
-        System.out.println("O jogo está pronto para começar");
+        System.out.println("Game ready to begin");
     }
 
 
     private static void inputNumber() {
-        if (isNull(board)){
-            System.out.println("O jogo ainda não foi iniciado iniciado");
+        if (isNull(board)) {
+            System.out.println("The game has not been started yet");
             return;
         }
 
-        System.out.println("Informe a coluna que em que o número será inserido");
+        System.out.println("Enter the column where the number will be inserted");
         var col = runUntilGetValidNumber(0, 8);
-        System.out.println("Informe a linha que em que o número será inserido");
+        System.out.println("Enter the row where the number will be inserted");
         var row = runUntilGetValidNumber(0, 8);
-        System.out.printf("Informe o número que vai entrar na posição [%s,%s]\n", col, row);
+        System.out.printf("Enter the number to insert at position [%s,%s]\n", col, row);
         var value = runUntilGetValidNumber(1, 9);
-        if (!board.changeValue(col, row, value)){
-            System.out.printf("A posição [%s,%s] tem um valor fixo\n", col, row);
+        if (!board.changeValue(col, row, value)) {
+            System.out.printf("The position [%s,%s] contains a fixed value\n", col, row);
         }
+
     }
 
     private static void removeNumber() {
-        if (isNull(board)){
-            System.out.println("O jogo ainda não foi iniciado iniciado");
+        if (isNull(board)) {
+            System.out.println("The game has not been started yet");
             return;
         }
 
-        System.out.println("Informe a coluna que em que o número será inserido");
+        System.out.println("Enter the column where the number will be removed");
         var col = runUntilGetValidNumber(0, 8);
-        System.out.println("Informe a linha que em que o número será inserido");
+        System.out.println("Enter the row where the number will be removed");
         var row = runUntilGetValidNumber(0, 8);
-        if (!board.clearValue(col, row)){
-            System.out.printf("A posição [%s,%s] tem um valor fixo\n", col, row);
+        if (!board.clearValue(col, row)) {
+            System.out.printf("The position [%s,%s] contains a fixed value\n", col, row);
         }
     }
 
     private static void showCurrentGame() {
+        if (isNull(board)){
+            System.out.println("Game not started.");
+            return;
+        }
+
+        var args = new Object[81];
+        var argPos = 0;
+        for (int i = 0; i < BOARD_LIMIT; i++) {
+            for (var col: board.getSpaces()){
+                args[argPos ++] = " " + ((isNull(col.get(i).getActual())) ? " " : col.get(i).getActual());
+            }
+        }
+        System.out.println("Game is in status");
+        System.out.printf((BOARD_TEMPLATE) + "\n", args);
     }
 
     private static void showGameStatus() {
+        if (isNull(board)) {
+            System.out.println("The game has not been started yet");
+            return;
+        }
+
+    System.out.printf("The game is currently in status: %s\n", board.getStatus().getLabel());
+        if (board.hasError()) {
+            System.out.println("The game contains errors");
+        } else {
+            System.out.println("The game contains no errors");
+        }
     }
 
     private static void clearGame() {
+        if (isNull(board)) {
+            System.out.println("The game has not been started yet");
+            return;
+        }
+
+        System.out.println("Are you sure you want to clear the game and lose all your progress?");
+        var confirm = scanner.next();
+        while (!confirm.equalsIgnoreCase("yes") && !confirm.equalsIgnoreCase("no")) {
+            System.out.println("Please enter 'yes' or 'no'");
+            confirm = scanner.next();
+        }
+
+        if (confirm.equalsIgnoreCase("yes")) {
+            board.reset();
+        }
     }
 
     private static void finishGame() {
-    }
+        if (isNull(board)) {
+            System.out.println("The game has not been started yet");
+            return;
+        }
 
+        if (board.gameIsFinished()) {
+            System.out.println("Congratulations, you have completed the game!");
+            showCurrentGame();
+            board = null;
+        } else if (board.hasError()) {
+            System.out.println("Your game contains errors. Please check your board and fix them.");
+        } else {
+            System.out.println("You still need to fill in some spaces.");
+        }
+    }
 
     private static int runUntilGetValidNumber(final int min, final int max){
         var current = scanner.nextInt();
         while (current < min || current > max){
-            System.out.printf("Informe um número entre %s e %s\n", min, max);
+            System.out.printf("Give a number between %s and %s\n", min, max);
             current = scanner.nextInt();
         }
         return current;
